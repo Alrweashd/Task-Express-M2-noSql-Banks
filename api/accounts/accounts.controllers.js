@@ -13,25 +13,40 @@ exports.accountCreate = async (req, res) => {
   }
 };
 
-exports.accountDelete = (req, res) => {
+exports.accountDelete = async (req, res) => {
   const { accountId } = req.params;
-  const foundAccount = accounts.find((account) => account.id === +accountId);
-  if (foundAccount) {
-    accounts = accounts.filter((account) => account.id !== +accountId);
-    res.status(204).end();
-  } else {
-    res.status(404).json({ message: "Account not found" });
+  try {
+    const x = await Account.findById(accountId);
+    //const found = await Account.findByIdAndDelete(accountId);
+    if (!x) {
+      return res.status(404).json({ msg: "not found" });
+    }
+    const found = await Account.findByIdAndDelete(accountId);
+    console.log(x);
+    return res.status(204);
+    //.json({ msg: `Account by id ${x} has been deleted` });
+  } catch (error) {
+    return res.status(500).json(error);
   }
+  // const foundAccount = accounts.find((account) => account.id === +accountId);
+  // if (foundAccount) {
+  //   accounts = accounts.filter((account) => account.id !== +accountId);
+  //   res.status(204).end();
+  // } else {
+  //   res.status(404).json({ message: "Account not found" });
+  // }
 };
 
-exports.accountUpdate = (req, res) => {
+exports.accountUpdate = async (req, res) => {
   const { accountId } = req.params;
-  const foundAccount = accounts.find((account) => account.id === +accountId);
-  if (foundAccount) {
-    foundAccount.funds = req.body.funds;
-    res.status(204).end();
-  } else {
-    res.status(404).json({ message: "Account not found" });
+  try {
+    //const foundAccount = await Account.findById(accountId);
+    const foundAccount = await Account.findByIdAndUpdate(accountId, req.body);
+
+    return res.status(204).json(foundAccount);
+  } catch (error) {
+    res.status(404).json({ error: "Account not found" });
+    console.log(error);
   }
 };
 
@@ -46,16 +61,14 @@ exports.accountsGet = async (req, res) => {
   }
 };
 
-exports.getAccountByUsername = (req, res) => {
+exports.getAccountByUsername = async (req, res) => {
   const { username } = req.params;
   try {
-    const foundAccount = Account.findById({ username: username });
+    const foundAccount = await Account.findOne({ username: username });
     if (req.query.currency === "usd") {
-      const accountInUsd = {
-        ...foundAccount,
-        funds: foundAccount.funds * 3.31,
-      };
-      res.status(201).json(accountInUsd);
+      foundAccount.funds = foundAccount.funds * 3.31;
+      console.log(foundAccount);
+      // return res.status(201).json(foundAccount);
     }
     res.status(201).json(foundAccount);
   } catch (error) {

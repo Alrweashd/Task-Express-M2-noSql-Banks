@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+//to access the url
 let dotenv = require("dotenv").config();
 const connectDB = async () => {
   try {
